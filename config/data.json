@@ -1,0 +1,17 @@
+[
+   
+    {
+        "USERID": 10,
+        "NOMBRE": "STURDEVIN13",
+        "APELLIDO": "MAYORGA13",
+        "CITY": "BSAS13",
+        "EMAIL": "prueba13"
+    }, 
+    {
+        "USERID": 11 ,
+        "NOMBRE": "STURDEVIN12",
+        "APELLIDO": "MAYORGA12",
+        "CITY": "BSAS12",
+        "EMAIL": "prueba12"
+    }
+  ]
