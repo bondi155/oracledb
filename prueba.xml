@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MBGMCR03>
+  <IDOC>
+    <EDI_DC40>
+      <id>11134</id>
+      <nombre>As</nombre>
+      <pais>Usa</pais>
+    </EDI_DC40>
+  </IDOC>
+  <E1MBGMCR/>
+  <IDOC>
+    <EDI_DC40>
+      <id>11133</id>
+      <nombre>Developer</nombre>
+      <pais>Usa</pais>
+    </EDI_DC40>
+  </IDOC>
+  <E1MBGMCR/>
+</MBGMCR03>

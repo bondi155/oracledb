@@ -1,6 +1,6 @@
 const dbConfig = require('../config/dbconfig');
 const oracledb = require('oracledb');
-const { create } = require('xmlbuilder2');
+var xml2js = require('xml2js');
 const fs = require('fs');
 
 //conexion a instant client       -----------0------------------
@@ -47,29 +47,23 @@ async function getData(request, response) {
 
         result.rows.forEach((element) => {
           EDI_DC40.push({
+            IDOC :{ 
+              EDI_DC40:{ 
             id: element.ID,
             nombre: element.NOMBRE,
             pais: element.PAIS,
+          }
+          },
+          E1MBGMCR :{
+            
+          }
           });
         }, this);
+
         console.log(EDI_DC40);
 
-        const root = create({ version: '1.0', encoding: 'UTF-8' })
-          .ele('MBGMCR03')
-          .ele('IDOC')
-          .ele('EDI_DC40')
-          .ele('id')
-          .txt(`${EDI_DC40[0].id}`)
-          .up()
-          .ele('nombre')
-          .txt(`${EDI_DC40[0].nombre}`)
-          .up()
-          .ele('pais')
-          .txt(`${EDI_DC40[0].pais}`)
-          .up()
-          .up();
-
-        const xml = root.end({ prettyPrint: true });
+        var builder = new xml2js.Builder({explicitRoot : false , rootName :'MBGMCR03'});
+        var xml = builder.buildObject(EDI_DC40);
         console.log(xml);
 
         fs.writeFile('prueba.xml', xml, (err) => {
