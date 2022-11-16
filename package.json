@@ -21,6 +21,8 @@
     "node-fetch": "^2.6.7",
     "object-to-xml": "^2.0.0",
     "oracledb": "^5.5.0",
-    "xml": "^1.0.1"
+    "xml": "^1.0.1",
+    "xmlbuilder": "^15.1.1",
+    "xmlbuilder2": "^3.0.2"
   }
 }
