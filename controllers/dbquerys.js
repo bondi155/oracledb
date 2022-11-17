@@ -17,7 +17,7 @@ if (process.platform === 'win32') {
 oracledb.autoCommit = true;
 process.env.ORA_SDTZ = 'UTC';
 
-async function getData(request, response) {
+async function getData (request, response) {
   //conexion a base de datos
   oracledb.getConnection(dbConfig, function (err, connection) {
     if (err) {
@@ -25,13 +25,14 @@ async function getData(request, response) {
       response.status(500).send('Error connecting to DB');
       return;
     }
-
+      
     console.log('conexion establecida ejecutando query...');
 
-    const sql = `SELECT * FROM personas`;
+    const sqlSelect = `SELECT * FROM personas where estado IS NULL`;
 
+  
     connection.execute(
-      sql,
+      sqlSelect,
       {},
       { outFormat: oracledb.OBJECT },
       (err, result) => {
@@ -43,27 +44,38 @@ async function getData(request, response) {
 
         console.log('RESULTSET:' + JSON.stringify(result));
 
-        let EDI_DC40 = [];
+        let querySelect = [];
+
 
         result.rows.forEach((element) => {
-          EDI_DC40.push({
-            IDOC :{ 
-              EDI_DC40:{ 
-            id: element.ID,
-            nombre: element.NOMBRE,
-            pais: element.PAIS,
-          }
-          },
-          E1MBGMCR :{
-            
-          }
+          querySelect.push({
+            IDOC: {
+              EDI_DC40: {
+                id: element.ID,
+                nombre: element.NOMBRE,
+                pais: element.PAIS,
+                estado: element.ESTADO,
+              },
+            },
+            E1MBGMCR: {},
           });
         }, this);
 
-        console.log(EDI_DC40);
+        let ids = querySelect.map (id => id.IDOC.EDI_DC40.id);
 
-        var builder = new xml2js.Builder({explicitRoot : false , rootName :'MBGMCR03'});
-        var xml = builder.buildObject(EDI_DC40);
+      
+
+
+
+        let sqlUpdate = `UPDATE personas SET estado = 'cargado' WHERE id = :id`;
+        const binds = {id: ids };
+
+       
+        var builder = new xml2js.Builder({
+          explicitRoot: false,
+          rootName: 'MBGMCR03',
+        });
+        var xml = builder.buildObject(querySelect);
         console.log(xml);
 
         fs.writeFile('prueba.xml', xml, (err) => {
@@ -78,3 +90,4 @@ async function getData(request, response) {
 module.exports = {
   getData: getData,
 };
+
