@@ -70,6 +70,8 @@ async function getData() {
     //
     sql = ` SELECT * FROM personas where estado = 'pendiente'`;
 
+    // sql = `UPDATE personas SET estado = 'pendiente' WHERE id = 11134`;
+
     result = await connection.execute(sql, {}, { outFormat: oracledb.OBJECT });
     console.log('RESULTSET:' + JSON.stringify(result));
 
@@ -107,6 +109,8 @@ async function getData() {
         if (err) throw err;
         console.log('archivo XML creado');
       });
+    }else {
+      console.log("No hay documentos para conversión a XML")
     }
 
     let ids = Object.values(ID_DC40).map((val) => ({ id: val.id }));
@@ -121,11 +125,8 @@ async function getData() {
     // Insert three rows
     //
 
-    ids > 4
-      ? (sql = `UPDATE personas SET estado = 'cargado' WHERE id IN (:ids)`)
-      : (sql = `UPDATE personas SET estado = 'cargado' WHERE id = :id`);
 
-    //sql = `INSERT INTO no_example VALUES (:1, :2)`;
+    sql = `UPDATE personas SET estado = 'cargado' WHERE id IN (:id)`
 
     binds = ids;
     //    binds =[{"id":ids}];
