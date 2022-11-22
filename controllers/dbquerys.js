@@ -37,16 +37,17 @@ const dbConfig = require('../config/dbconfig');
 const xml2js = require('xml2js');
 var o2x = require('object-to-xml');
 
-
 // On Windows and macOS, you can specify the directory containing the Oracle
 // Client Libraries at runtime, or before Node.js starts.  On other platforms
 // the system library search path must always be set before Node.js is started.
 // See the node-oracledb installation documentation.
 // If the search path is not correct, you will get a DPI-1047 error.
 let libPath;
-if (process.platform === 'win32') {           // Windows
+if (process.platform === 'win32') {
+  // Windows
   libPath = 'C:\\oracle\\instantclient_12_2';
-} else if (process.platform === 'darwin') {   // macOS
+} else if (process.platform === 'darwin') {
+  // macOS
   libPath = process.env.HOME + '/Downloads/instantclient_19_8';
 }
 if (libPath && fs.existsSync(libPath)) {
@@ -60,7 +61,6 @@ async function getData() {
   let connection;
 
   try {
-
     let sql, binds, options, result;
 
     connection = await oracledb.getConnection(dbConfig);
@@ -70,96 +70,85 @@ async function getData() {
     //
     sql = ` SELECT * FROM personas where estado = 'pendiente'`;
 
-    result = await connection.execute(sql, {}, { outFormat: oracledb.OBJECT } );
+    result = await connection.execute(sql, {}, { outFormat: oracledb.OBJECT });
     console.log('RESULTSET:' + JSON.stringify(result));
 
-    let querySelect = [];
-    
+    let ID_DC40 = [];
 
-    result.rows.forEach((element) => {
-      querySelect.push({
-        IDOC: {
-          EDI_DC40: {
-            id: element.ID,
-            nombre: element.NOMBRE,
-            pais: element.PAIS,
-           status: element.ESTADO,
-          },
-        },
-        E1MBGMCR: {},
-      });
-    }, this);
+    ID_DC40 = result.rows.map((person) => ({
+      id: person.ID,
+      nombre: person.NOMBRE,
+      pais: person.PAIS,
+      status: person.ESTADO,
+    }));
 
-  queryFormat = querySelect.map(person => ({ id: person.IDOC.EDI_DC40.id, nombre: person.IDOC.EDI_DC40.nombre,
-     pais: person.IDOC.EDI_DC40.pais, status: person.IDOC.EDI_DC40.status }));
-
-    console.log(queryFormat);
+    console.log(ID_DC40);
 
     var builder = new xml2js.Builder({
       explicitRoot: false,
       rootName: 'MBGMCR03',
     });
 
-    var xml = builder.buildObject(
-      
-      {IDOC:{  
-      queryFormat}
-    
+    var xml = builder.buildObject({
+      IDOC: {
+        ID_DC40,
+      },
     });
 
     console.log(xml);
-    
 
-    let status = querySelect.map((status) => status.IDOC.EDI_DC40.status);
-    console.log(status);
+    if (
+      typeof ID_DC40 != 'undefined' &&
+      ID_DC40 != null &&
+      ID_DC40.length != null &&
+      ID_DC40.length > 0
+    ) {
+      fs.writeFile('prueba.xml', xml, (err) => {
+        if (err) throw err;
+        console.log('archivo XML creado');
+      });
+    }
 
-    if (typeof querySelect != "undefined" && querySelect != null && querySelect.length != null && querySelect.length > 0) { 
+    let ids = Object.values(ID_DC40).map((val) => ({ id: val.id }));
 
-    fs.writeFile('prueba.xml', xml, (err) => {
-      if (err) throw err;
-      console.log('archivo XML creado');
-    });
-  }
+    //let ids =  Object.values(ID_DC40).map(val => (val.id ));
 
+    //const ids = JSON.stringify(idsObj.join(','));
 
-   let ids =  queryFormat.map(val => ({ id: val.id }));
-   
     console.log(ids);
-
 
     //
     // Insert three rows
     //
 
-   // sql =`UPDATE personas SET estado = 'pendiente' WHERE id IN (11134, 11133)`;
-
-      //sql = `UPDATE personas SET estado = 'cargado' WHERE id IN (:1)`;
-
+    ids > 4
+      ? (sql = `UPDATE personas SET estado = 'cargado' WHERE id IN (:ids)`)
+      : (sql = `UPDATE personas SET estado = 'cargado' WHERE id = :id`);
 
     //sql = `INSERT INTO no_example VALUES (:1, :2)`;
 
-    binds = [ 
-    [ 11134, 11133]
-    ]
-    ;
+    binds = ids;
+    //    binds =[{"id":ids}];
 
     // For a complete list of options see the documentation.
     options = {
       autoCommit: true,
       // batchErrors: true,  // continue processing even if there are data errors
-    // bindDefs: [
-      //  { type: oracledb.NUMBER },
-        //{ type: oracledb.STRING, maxSize: 20 }
-      //]
+      bindDefs: {
+        id: { type: oracledb.NUMBER },
+      },
+      //{ type: oracledb.STRING, maxSize: 20 }
     };
 
-   //result = await connection.execute(sql, binds, options);
+    //result = await connection.execute(sql);
 
-    console.log("Number of rows inserted:", result.rowsAffected);
+    result = await connection.executeMany(sql, binds, options);
+
+    console.log('Number of rows inserted:', result.rowsAffected);
 
     //
     // Query the data
-    //
+    // BUENO ME FALTA HACER IF EN LINEA 146 , ME FALTA HACER UPDATE Y PROBAR CON MULTIPLE VALORES Y AVERIGUAR COMO HACER SERVICIO ESTABLE
 
     sql = `SELECT * FROM personas`;
 
@@ -168,7 +157,7 @@ async function getData() {
     // For a complete list of options see the documentation.
     options = {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
-      autoCommit: true   // query result format
+      autoCommit: true, // query result format
       // extendedMetaData: true,               // get extra metadata
       // prefetchRows:     100,                // internal buffer allocation size for tuning
       // fetchArraySize:   100                 // internal buffer allocation size for tuning
@@ -176,9 +165,9 @@ async function getData() {
 
     result = await connection.execute(sql, binds, options);
 
-    console.log("Metadata: ");
+    console.log('Metadata: ');
     console.dir(result.metaData, { depth: null });
-    console.log("Query results: ");
+    console.log('Query results: ');
     console.dir(result.rows, { depth: null });
 
     //
@@ -187,9 +176,8 @@ async function getData() {
 
     sql = `SELECT TO_CHAR(CURRENT_DATE, 'DD-Mon-YYYY HH24:MI') AS CD FROM DUAL`;
     result = await connection.execute(sql, binds, options);
-    console.log("Current date query results: ");
+    console.log('Current date query results: ');
     console.log(result.rows[0]['CD']);
-
   } catch (err) {
     console.error(err);
   } finally {
@@ -203,8 +191,6 @@ async function getData() {
   }
 }
 
-
 module.exports = {
   getData: getData,
 };
-
