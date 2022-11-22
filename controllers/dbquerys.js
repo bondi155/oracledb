@@ -1,47 +1,8 @@
-/* Copyright (c) 2018, 2022, Oracle and/or its affiliates. */
-
-/******************************************************************************
- *
- * You may not use the identified files except in compliance with the Apache
- * License, Version 2.0 (the "License.")
- *
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0.
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * NAME
- *   example.js
- *
- * DESCRIPTION
- *   A basic node-oracledb example using Node.js 8's async/await syntax.
- *
- *   For connection pool examples see connectionpool.js and webapp.js
- *   For a ResultSet example see resultset1.js
- *   For a query stream example see selectstream.js
- *
- *   This example requires node-oracledb 5 or later.
- *
- *****************************************************************************/
-
-// Using a fixed Oracle time zone helps avoid machine and deployment differences
-
 const fs = require('fs');
 const oracledb = require('oracledb');
 const dbConfig = require('../config/dbconfig');
 const xml2js = require('xml2js');
-var o2x = require('object-to-xml');
 
-// On Windows and macOS, you can specify the directory containing the Oracle
-// Client Libraries at runtime, or before Node.js starts.  On other platforms
-// the system library search path must always be set before Node.js is started.
-// See the node-oracledb installation documentation.
-// If the search path is not correct, you will get a DPI-1047 error.
 let libPath;
 if (process.platform === 'win32') {
   // Windows
@@ -66,13 +27,14 @@ async function getData() {
     connection = await oracledb.getConnection(dbConfig);
 
     //
-    // Create a table
+    // Select
     //
-    sql = ` SELECT * FROM personas where estado = 'pendiente'`;
+      sql = `SELECT * FROM personas where estado = 'pendiente'`;
 
-    // sql = `UPDATE personas SET estado = 'pendiente' WHERE id = 11134`;
+     //sql = `UPDATE personas SET estado = 'pendiente' WHERE id iN (11134, 11133)`;
 
     result = await connection.execute(sql, {}, { outFormat: oracledb.OBJECT });
+
     console.log('RESULTSET:' + JSON.stringify(result));
 
     let ID_DC40 = [];
@@ -99,19 +61,15 @@ async function getData() {
 
     console.log(xml);
 
-    if (
-      typeof ID_DC40 != 'undefined' &&
-      ID_DC40 != null &&
-      ID_DC40.length != null &&
-      ID_DC40.length > 0
-    ) {
-      fs.writeFile('prueba.xml', xml, (err) => {
-        if (err) throw err;
-        console.log('archivo XML creado');
-      });
-    }else {
-      console.log("No hay documentos para conversión a XML")
-    }
+    typeof ID_DC40 != 'undefined' &&
+    ID_DC40 != null &&
+    ID_DC40.length != null &&
+    ID_DC40.length > 0
+      ? fs.writeFile('prueba.xml', xml, (err) => {
+          if (err) throw err;
+          console.log('archivo XML creado');
+        })
+      : console.log('No hay documentos para conversión a XML');
 
     let ids = Object.values(ID_DC40).map((val) => ({ id: val.id }));
 
@@ -125,8 +83,7 @@ async function getData() {
     // Insert three rows
     //
 
-
-    sql = `UPDATE personas SET estado = 'cargado' WHERE id IN (:id)`
+    sql = `UPDATE personas SET estado = 'cargado' WHERE id IN (:id)`;
 
     binds = ids;
     //    binds =[{"id":ids}];
@@ -143,8 +100,14 @@ async function getData() {
 
     //result = await connection.execute(sql);
 
-    result = await connection.executeMany(sql, binds, options);
-
+    if (
+      typeof ids != 'undefined' &&
+      ids != null &&
+      ids.length != null &&
+      ids.length > 0
+    ) {
+      result = await connection.executeMany(sql, binds, options);
+    }
     console.log('Number of rows inserted:', result.rowsAffected);
 
     //
