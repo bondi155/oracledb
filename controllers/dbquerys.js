@@ -168,7 +168,7 @@ async function transactionXml() {
       result = await connection.executeMany(sql, binds, options);
       console.log('Number of rows inserted:', result.rowsAffected);
       logger.transactionLog.log('info', 'rows modificados', result.rowsAffected);
-      logger.transactionLog.log('info', 'IDs procesados', idTcode);
+      logger.transactionLog.log('info', 'IDs procesados de transactions', idTcode);
     }
 
     //
@@ -335,7 +335,7 @@ async function requisitionXml() {
       result = await connection.executeMany(sql, binds, options);
       console.log('Number of rows inserted:', result.rowsAffected);
       logger.transactionLog.log('info', 'rows modificados', result.rowsAffected);
-      logger.transactionLog.log('info', 'IDs procesados', idReqcode);
+      logger.transactionLog.log('info', 'IDs procesados de requision', idReqcode);
 
 
     }
