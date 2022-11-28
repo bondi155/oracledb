@@ -9,6 +9,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ type: '*/*' }));
 
 
-//dbquery.transactionXml();
+dbquery.transactionXml();
 dbquery.requisitionXml();
 

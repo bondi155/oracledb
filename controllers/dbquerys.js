@@ -2,6 +2,7 @@ const fs = require('fs');
 const oracledb = require('oracledb');
 const dbConfig = require('../config/dbconfig');
 const xml2js = require('xml2js');
+const logger = require ('./logger');
 //config oracle cliente
 let libPath;
 if (process.platform === 'win32') {
@@ -27,6 +28,8 @@ async function transactionXml() {
     let sql, binds, options, result;
 
     connection = await oracledb.getConnection(dbConfig);
+    logger.transactionLog.log('info', 'succefull connection') ;
+
 
     // Select
     sql = `select tr.tra_code,
@@ -57,7 +60,7 @@ async function transactionXml() {
 
     result = await connection.execute(sql, {}, { outFormat: oracledb.OBJECT });
 
-    console.log('RESULTSET:' + JSON.stringify(result));
+    //console.log('RESULTSET:' + JSON.stringify(result));
 
     let EDI_DC40 = [];
 
@@ -130,13 +133,13 @@ async function transactionXml() {
           if (err) throw err;
           console.log('archivo XML creado');
         })
-      : console.log('No hay documentos para conversión a XML');
+      : console.log('No hay documentos para conversión a XML')
+      logger.transactionLog.log('info', 'No hay documentos para conversión a XML');
 
     //format map to array object
     let idTcode = Object.values(EDI_DC40).map((val) => ({
       id: val.IDOC.EDI_DC40.SNDPOR,
     }));
-
     console.log(idTcode);
 
     // Update in Oracle DB status to process once a xml is created ( id = transaction code)
@@ -163,15 +166,16 @@ async function transactionXml() {
       idTcode.length > 0
     ) {
       result = await connection.executeMany(sql, binds, options);
+      console.log('Number of rows inserted:', result.rowsAffected);
+      logger.transactionLog.log('info', 'rows modificados', result.rowsAffected);
+      logger.transactionLog.log('info', 'IDs procesados', idTcode);
     }
-
-    console.log('Number of rows inserted:', result.rowsAffected);
 
     //
     // Query the data
 
-    console.log('Metadata: ');
-    console.dir(result.metaData, { depth: null });
+    //console.log('Metadata: ');
+    //console.dir(result.metaData, { depth: null });
     console.log('Query results: ');
     console.dir(result.rows, { depth: null });
 
@@ -179,12 +183,10 @@ async function transactionXml() {
     // Show the date.  The value of ORA_SDTZ affects the output
     //
 
-    sql = `SELECT TO_CHAR(CURRENT_DATE, 'DD-Mon-YYYY HH24:MI') AS CD FROM DUAL`;
-    result = await connection.execute(sql, binds, options);
-    console.log('Current date query results: ');
-    console.log(result.rows[0]['CD']);
+    
   } catch (err) {
     console.error(err);
+    logger.transactionLog.log('error', (err))
   } finally {
     if (connection) {
       try {
@@ -235,7 +237,7 @@ async function requisitionXml() {
 
     result = await connection.execute(sql, {}, { outFormat: oracledb.OBJECT });
 
-    console.log('RESULTSET:' + JSON.stringify(result));
+    //console.log('RESULTSET:' + JSON.stringify(result));
 
     let EDI_DC40 = [];
 
@@ -300,13 +302,17 @@ async function requisitionXml() {
           if (err) throw err;
           console.log('archivo XML creado');
         })
-      : console.log('No hay documentos para conversión a XML');
+      : console.log('No hay documentos para conversión a XML')
+      logger.transactionLog.log('info', 'No hay documentos para conversión a XML');
+
 
     let idReqcode = Object.values(EDI_DC40).map((val) => ({
       id: val.IDOC.EDI_DC40.SNDPOR,
     }));
 
     console.log(idReqcode);
+    //logger.transactionLog.log('info', 'IDs por procesar', idReqcode);
+
 
     // Update status of proccess req_codes
 
@@ -327,11 +333,16 @@ async function requisitionXml() {
       idReqcode.length > 0
     ) {
       result = await connection.executeMany(sql, binds, options);
+      console.log('Number of rows inserted:', result.rowsAffected);
+      logger.transactionLog.log('info', 'rows modificados', result.rowsAffected);
+      logger.transactionLog.log('info', 'IDs procesados', idReqcode);
+
+
     }
 
-    console.log('Number of rows inserted:', result.rowsAffected);
   } catch (err) {
     console.error(err);
+    logger.transactionLog.log('error', (err))
   } finally {
     if (connection) {
       try {
