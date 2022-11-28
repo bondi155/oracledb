@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +21,7 @@
     "node-fetch": "^2.6.7",
     "object-to-xml": "^2.0.0",
     "oracledb": "^5.5.0",
+    "winston": "^3.8.2",
     "xml": "^1.0.1",
     "xml2js": "^0.4.23",
     "xmlbuilder": "^15.1.1",
