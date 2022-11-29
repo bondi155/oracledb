@@ -1,21 +1,42 @@
-const{createLogger, transports, format} = require('winston')
+const {createLogger, transports, format, prettyPrint} = require('winston')
+require('winston-daily-rotate-file');
+
+const timezoned = () =>{
+
+    return new Date().toLocaleString('en-US',
+    {
+        timeZone: 'America/Mexico_city'
+    })
+}
+
 
 const transactionLog = createLogger({
+    
    transports:[
-    new transports.File({ 
-            filename: 'transactionXml.log',
+    new transports.DailyRotateFile({ 
+
+            filename: 'log/xmlapp-%DATE%.log',
+            datePattern:'YYYY-MM-DD-HH',
             level: 'info',
-            format: format.combine(format.timestamp(), format.json())
+            maxSize: '20m',
+            maxFiles: '14d',
+            zippedArchive: true,
+            format: format.combine(format.timestamp({format: timezoned}), format.prettyPrint())
 
         }),
-        new transports.File({
-            filename:'transaction-error.log',
+        new transports.DailyRotateFile({
+            filename:'log/error-%DATE%.log',
             level:'error',
-            format: format.combine(format.timestamp(), format.json())
+            maxSize: '20m',
+            maxFiles: '14d',
+            zippedArchive: true,
+            datePattern: 'YYYY-MM-DD-HH',
+            format: format.combine(format.timestamp({format: timezoned}), format.prettyPrint())
 
         })
     ]
 })
+//si no se quiere log diario con fecha en filename cambiar DailyRotateFile x file y quitar %DATE% de los titulos.
 
 module.exports={
     transactionLog

@@ -134,7 +134,7 @@ async function transactionXml() {
           console.log('archivo XML creado');
         })
       : console.log('No hay documentos para conversión a XML')
-      logger.transactionLog.log('info', 'No hay documentos para conversión a XML');
+      logger.transactionLog.log('info', 'No hay documentos de transaction para conversión a XML');
 
     //format map to array object
     let idTcode = Object.values(EDI_DC40).map((val) => ({
@@ -303,7 +303,7 @@ async function requisitionXml() {
           console.log('archivo XML creado');
         })
       : console.log('No hay documentos para conversión a XML')
-      logger.transactionLog.log('info', 'No hay documentos para conversión a XML');
+      logger.transactionLog.log('info', 'No hay documentos de requisitions para conversión a XML');
 
 
     let idReqcode = Object.values(EDI_DC40).map((val) => ({
