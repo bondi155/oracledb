@@ -6,7 +6,7 @@
 ° Ejecutar el programe en terminal node server.js.
 
 
-° Logger configurado para loggin.
+° Winston configurado para loggin.
 
 
 ° Modulo oracledb para el manejo de conexiones a Oracle.
