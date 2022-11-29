@@ -1,6 +1,6 @@
 # oracledb
 
-° Clonar github desde url en VScode.
+° Clonar github desde url en VScode y crear carpeta log en la raiz del proyecto.
 
 
 ° Ejecutar el programe en terminal node server.js.
