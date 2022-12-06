@@ -2,8 +2,7 @@ const fs = require('fs');
 const oracledb = require('oracledb');
 const dbConfig = require('../config/dbconfig');
 const xml2js = require('xml2js');
-const logger = require('./logger');
-const { response } = require('express');
+const logger = require ('./logger');
 //config oracle cliente
 let libPath;
 if (process.platform === 'win32') {
@@ -22,14 +21,15 @@ oracledb.autoCommit = true;
 process.env.ORA_SDTZ = 'UTC';
 
 //function for transaction XML (MBGMCR03 movement)
-async function transactionXml(request, response) {
+async function transactionXml() {
   let connection;
 
   try {
     let sql, binds, options, result;
 
     connection = await oracledb.getConnection(dbConfig);
-    logger.transactionLog.log('info', 'succefull connection');
+    logger.transactionLog.log('info', 'succefull connection') ;
+
 
     // Select
     sql = `select tr.tra_code,
@@ -55,7 +55,7 @@ async function transactionXml(request, response) {
     and tl.trl_trans = tr.tra_code
     and tl.trl_part = pa.par_code
     and tr.tra_status = 'A'
-    and TRL_UDFCHKBOX05 = '+'
+    and TRL_UDFCHKBOX05 = '-'
     order by tr.tra_code DESC`;
 
     result = await connection.execute(sql, {}, { outFormat: oracledb.OBJECT });
@@ -121,9 +121,20 @@ async function transactionXml(request, response) {
       rootName: 'MBGMCR03',
     });
 
-    response.send(builder.buildObject(EDI_DC40));
+    var xml = builder.buildObject(EDI_DC40);
 
-    // console.log(xml);
+    console.log(xml);
+
+    typeof EDI_DC40 != 'undefined' &&
+    EDI_DC40 != null &&
+    EDI_DC40.length != null &&
+    EDI_DC40.length > 0
+      ? fs.writeFile('pruebaTra.xml', xml, (err) => {
+          if (err) throw err;
+          console.log('archivo XML creado');
+        })
+      : console.log('No hay documentos para conversión a XML')
+      logger.transactionLog.log('info', 'No hay documentos de transaction para conversión a XML');
 
     //format map to array object
     let idTcode = Object.values(EDI_DC40).map((val) => ({
@@ -156,27 +167,26 @@ async function transactionXml(request, response) {
     ) {
       result = await connection.executeMany(sql, binds, options);
       console.log('Number of rows inserted:', result.rowsAffected);
-      logger.transactionLog.log(
-        'info',
-        'rows modificados',
-        result.rowsAffected
-      );
-      logger.transactionLog.log(
-        'info',
-        'IDs procesados de transactions',
-        idTcode
-      );
+      logger.transactionLog.log('info', 'rows modificados', result.rowsAffected);
+      logger.transactionLog.log('info', 'IDs procesados de transactions', idTcode);
     }
 
-  
+    //
     // Query the data
+
     //console.log('Metadata: ');
     //console.dir(result.metaData, { depth: null });
     console.log('Query results: ');
     console.dir(result.rows, { depth: null });
+
+    //
+    // Show the date.  The value of ORA_SDTZ affects the output
+    //
+
+    
   } catch (err) {
     console.error(err);
-    logger.transactionLog.log('error', err);
+    logger.transactionLog.log('error', (err))
   } finally {
     if (connection) {
       try {
@@ -189,7 +199,7 @@ async function transactionXml(request, response) {
 }
 
 // Second function for requesitions xml
-async function requisitionXml(request, response) {
+async function requisitionXml() {
   let connection;
 
   try {
@@ -221,7 +231,7 @@ async function requisitionXml(request, response) {
     from r5requisitions rq, r5requislines rl
     where rq.req_code = rl.rql_req
     and rq.req_status = 'A'
-    and rq.req_udfchkbox05 = '+'
+    and rq.req_udfchkbox05 = '-'
     and rq.req_code = 12311
     and rownum <= 10 order by rq.req_code DESC`;
 
@@ -279,11 +289,22 @@ async function requisitionXml(request, response) {
       explicitRoot: false,
       rootName: 'PREQCR02',
     });
-    
 
-    response.send(builder.buildObject(EDI_DC40));
+    var xml = builder.buildObject(EDI_DC40);
 
-    //console.log(xml);
+    console.log(xml);
+
+    typeof EDI_DC40 != 'undefined' &&
+    EDI_DC40 != null &&
+    EDI_DC40.length != null &&
+    EDI_DC40.length > 0
+      ? fs.writeFile('pruebaReq.xml', xml, (err) => {
+          if (err) throw err;
+          console.log('archivo XML creado');
+        })
+      : console.log('No hay documentos para conversión a XML')
+      logger.transactionLog.log('info', 'No hay documentos de requisitions para conversión a XML');
+
 
     let idReqcode = Object.values(EDI_DC40).map((val) => ({
       id: val.IDOC.EDI_DC40.SNDPOR,
@@ -291,6 +312,7 @@ async function requisitionXml(request, response) {
 
     console.log(idReqcode);
     //logger.transactionLog.log('info', 'IDs por procesar', idReqcode);
+
 
     // Update status of proccess req_codes
 
@@ -301,7 +323,7 @@ async function requisitionXml(request, response) {
 
     // For a complete list of options see the documentation.
     options = {
-      autoCommit: true,
+    autoCommit: true,
     };
 
     if (
@@ -312,20 +334,15 @@ async function requisitionXml(request, response) {
     ) {
       result = await connection.executeMany(sql, binds, options);
       console.log('Number of rows inserted:', result.rowsAffected);
-      logger.transactionLog.log(
-        'info',
-        'rows modificados',
-        result.rowsAffected
-      );
-      logger.transactionLog.log(
-        'info',
-        'IDs procesados de requision',
-        idReqcode
-      );
+      logger.transactionLog.log('info', 'rows modificados', result.rowsAffected);
+      logger.transactionLog.log('info', 'IDs procesados de requision', idReqcode);
+
+
     }
+
   } catch (err) {
     console.error(err);
-    logger.transactionLog.log('error', err);
+    logger.transactionLog.log('error', (err))
   } finally {
     if (connection) {
       try {
@@ -338,6 +355,6 @@ async function requisitionXml(request, response) {
 }
 
 module.exports = {
-  transactionXml: transactionXml,
+  transactionXml:transactionXml,
   requisitionXml: requisitionXml,
 };
